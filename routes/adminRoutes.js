@@ -8,6 +8,9 @@ const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
 
+// Dummy generateToken function (replace with your actual JWT generation)
+const { generateToken } = require("../jwt"); // Make sure this exists
+
 // -------------------- LOGIN --------------------
 router.post("/login", async (req, res) => {
   try {
@@ -22,7 +25,6 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Incorrect Password" });
     }
 
-    // Generate token however you do it, here assumed generateToken is imported
     const payload = { id: admin_._id };
     const token = generateToken(payload);
 
@@ -69,10 +71,8 @@ router.post("/upload-doc", upload.single("file"), async (req, res) => {
     });
     await admin_.save();
 
-    // Trigger Python script - use absolute path and safe args
-    const pythonScript = path.resolve(
-      "D:/Projects/Chat_Bot_Rag/Final_ChatBot/chatbot_doc_5.py"
-    );
+    // Use relative path to your Python script for deployment
+    const pythonScript = path.join(__dirname, "..", "scripts", "chatbot_doc_5.py");
 
     const pyProcess = spawn("python", [pythonScript, file.path]);
 
