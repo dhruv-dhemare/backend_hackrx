@@ -4,10 +4,11 @@ const bodyParser = require('body-parser');
 const { exec } = require('child_process');
 const path = require('path');
 
+// 👉 Load environment variables BEFORE requiring db.js
 require("dotenv").config();
 
 const app = express();
-const db = require('./db'); 
+const db = require('./db'); // now MONGO_URL will be available
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -30,6 +31,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
+// Root route
 app.get('/', (req, res) => {
   try {
     console.log('🌟 REAL BACKEND REACHED');
@@ -40,25 +42,25 @@ app.get('/', (req, res) => {
   }
 });
 
-// Example route to run chatbot_doc_5.py
+// New route to run Python script
 app.get('/run-python', (req, res) => {
   const scriptPath = path.join(__dirname, 'chatbot_doc_5.py');
 
   exec(`python "${scriptPath}"`, (error, stdout, stderr) => {
     if (error) {
-      console.error(`Exec error: ${error.message}`);
-      return res.status(500).send({ error: error.message });
+      console.error('Python exec error:', error);
+      return res.status(500).json({ error: error.message });
     }
     if (stderr) {
-      console.error(`Python stderr: ${stderr}`);
-      // You can choose to treat this as an error or just log it
+      console.error('Python stderr:', stderr);
+      // You can decide to send stderr as error or ignore it
     }
-    console.log(`Python stdout: ${stdout}`);
-    res.send({ output: stdout });
+    console.log('Python stdout:', stdout);
+    res.json({ output: stdout });
   });
 });
 
-// Routes
+// Existing routes
 const userRoutes = require('./routes/userRoutes');
 app.use('/user', userRoutes);
 
