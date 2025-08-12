@@ -45,15 +45,18 @@ app.get('/', (req, res) => {
 // New route to run Python script
 app.get('/run-python', (req, res) => {
   const scriptPath = path.join(__dirname, 'chatbot_doc_5.py');
+  // Use 'python3' if your environment requires it
+  const pythonCmd = 'python'; // or 'python3'
 
-  exec(`python "${scriptPath}"`, (error, stdout, stderr) => {
+  exec(`${pythonCmd} "${scriptPath}"`, (error, stdout, stderr) => {
     if (error) {
       console.error('Python exec error:', error);
       return res.status(500).json({ error: error.message });
     }
     if (stderr) {
       console.error('Python stderr:', stderr);
-      // You can decide to send stderr as error or ignore it
+      // Optional: Send stderr as error response to frontend
+      // return res.status(500).json({ error: stderr });
     }
     console.log('Python stdout:', stdout);
     res.json({ output: stdout });
