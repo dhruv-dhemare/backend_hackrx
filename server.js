@@ -1,12 +1,13 @@
 const express = require('express');
 const cors = require("cors");
 const bodyParser = require('body-parser');
+const { exec } = require('child_process');
+const path = require('path');
 
-// 👉 Load environment variables BEFORE requiring db.js
 require("dotenv").config();
 
 const app = express();
-const db = require('./db'); // now MONGO_URL will be available
+const db = require('./db'); 
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -25,12 +26,10 @@ app.use(cors({
   credentials: true
 }));
 
-
 const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
-// Root route
 app.get('/', (req, res) => {
   try {
     console.log('🌟 REAL BACKEND REACHED');
@@ -39,6 +38,24 @@ app.get('/', (req, res) => {
     console.log('Invalid server', error);
     return res.status(500).send({ error: 'Server error occurred' });
   }
+});
+
+// Example route to run chatbot_doc_5.py
+app.get('/run-python', (req, res) => {
+  const scriptPath = path.join(__dirname, 'chatbot_doc_5.py');
+
+  exec(`python "${scriptPath}"`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Exec error: ${error.message}`);
+      return res.status(500).send({ error: error.message });
+    }
+    if (stderr) {
+      console.error(`Python stderr: ${stderr}`);
+      // You can choose to treat this as an error or just log it
+    }
+    console.log(`Python stdout: ${stdout}`);
+    res.send({ output: stdout });
+  });
 });
 
 // Routes
