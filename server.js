@@ -15,9 +15,10 @@ const allowedOrigins = [
   'https://hackrx-delulu-guys.netlify.app'
 ];
 
+// Global CORS middleware - runs before all routes
 app.use(cors({
   origin: function(origin, callback){
-    if (!origin) return callback(null, true);
+    if (!origin) return callback(null, true); // Allow REST clients like Postman with no origin
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
       return callback(new Error(msg), false);
@@ -37,16 +38,15 @@ app.get('/', (req, res) => {
     console.log('🌟 REAL BACKEND REACHED');
     return res.send('WELCOME TO BAJAJ FINANCE ✅');
   } catch (error) {
-    console.log('Invalid server', error);
+    console.error('Invalid server:', error);
     return res.status(500).send({ error: 'Server error occurred' });
   }
 });
 
-// New route to run Python script
+// Run Python script route
 app.get('/run-python', (req, res) => {
   const scriptPath = path.join(__dirname, 'chatbot_doc_5.py');
-  // Use 'python3' if your environment requires it
-  const pythonCmd = 'python'; // or 'python3'
+  const pythonCmd = 'python'; // or 'python3' if needed
 
   exec(`${pythonCmd} "${scriptPath}"`, (error, stdout, stderr) => {
     if (error) {
@@ -55,20 +55,42 @@ app.get('/run-python', (req, res) => {
     }
     if (stderr) {
       console.error('Python stderr:', stderr);
-      // Optional: Send stderr as error response to frontend
-      // return res.status(500).json({ error: stderr });
+      // Optionally: return res.status(500).json({ error: stderr });
     }
     console.log('Python stdout:', stdout);
     res.json({ output: stdout });
   });
 });
 
-// Existing routes
+// Dummy user routes (replace with your actual userRoutes)
 const userRoutes = require('./routes/userRoutes');
 app.use('/user', userRoutes);
 
-const adminRoutes = require('./routes/adminRoutes');
-app.use('/admin', adminRoutes);
+// Example adminRoutes with basic /get-docs and /upload-doc stubs
+const expressRouter = require('express').Router();
+
+expressRouter.get('/get-docs', (req, res) => {
+  // TODO: Replace with your actual logic
+  res.json({ docs: ["doc1", "doc2"] });
+});
+
+expressRouter.post('/upload-doc', (req, res) => {
+  // TODO: Replace with your actual upload handling logic
+  res.json({ message: 'Upload successful' });
+});
+
+app.use('/admin', expressRouter);
+
+// 404 handler - catch all unmatched routes
+app.use((req, res, next) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
