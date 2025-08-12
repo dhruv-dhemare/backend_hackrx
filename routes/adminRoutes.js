@@ -8,7 +8,7 @@ const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
 
-// -------------------- LOGIN --------------------
+// --- LOGIN ---
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -22,23 +22,24 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Incorrect Password" });
     }
 
-    const payload = { id: admin_._id };
-    const token = generateToken(payload);
+    // For token generation, if you have your JWT setup uncomment below:
+    // const payload = { id: admin_._id };
+    // const token = generateToken(payload);
 
-    res.status(200).json({ response: admin_, token });
+    res.status(200).json({ response: admin_ /*, token*/ });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// -------------------- ENSURE UPLOADS FOLDER --------------------
+// Ensure uploads folder exists
 const uploadsDir = path.join(__dirname, "../uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// -------------------- MULTER STORAGE --------------------
+// Multer storage config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) =>
@@ -46,7 +47,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// -------------------- UPLOAD DOCUMENT --------------------
+// UPLOAD DOCUMENT
 router.post("/upload-doc", upload.single("file"), async (req, res) => {
   try {
     const file = req.file;
@@ -68,7 +69,7 @@ router.post("/upload-doc", upload.single("file"), async (req, res) => {
     });
     await admin_.save();
 
-    // Trigger Python script - use absolute path and safe args
+    // Trigger Python script with absolute path to your script
     const pythonScript = path.resolve("D:/Projects/Chat_Bot_Rag/Final_ChatBot/chatbot_doc_5.py");
 
     const pyProcess = spawn("python", [pythonScript, file.path]);
@@ -98,7 +99,7 @@ router.post("/upload-doc", upload.single("file"), async (req, res) => {
   }
 });
 
-// -------------------- DELETE DOCUMENT --------------------
+// DELETE DOCUMENT
 router.delete("/delete-doc/:docName", async (req, res) => {
   try {
     const { docName } = req.params;
@@ -109,17 +110,14 @@ router.delete("/delete-doc/:docName", async (req, res) => {
       return res.status(404).json({ error: "Admin not found" });
     }
 
-    // Find the document
     const document = admin_.documents.find((doc) => doc.name === docName);
     if (!document) {
       return res.status(404).json({ error: "Document not found" });
     }
 
-    // Remove from DB
     admin_.documents = admin_.documents.filter((doc) => doc.name !== docName);
     await admin_.save();
 
-    // Remove file from disk
     if (document.path && fs.existsSync(document.path)) {
       fs.unlinkSync(document.path);
       console.log(`🗑️ Deleted file from disk: ${document.path}`);
@@ -132,7 +130,7 @@ router.delete("/delete-doc/:docName", async (req, res) => {
   }
 });
 
-// -------------------- SERVE DOCUMENT --------------------
+// SERVE DOCUMENT
 router.get("/document/:filename", async (req, res) => {
   try {
     const { filename } = req.params;
@@ -166,7 +164,7 @@ router.get("/document/:filename", async (req, res) => {
   }
 });
 
-// -------------------- GET ALL DOCUMENTS --------------------
+// GET ALL DOCUMENTS
 router.get("/get-docs", async (req, res) => {
   try {
     const adminUsername = process.env.ADMIN_USERNAME;
