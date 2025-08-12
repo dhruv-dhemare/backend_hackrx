@@ -8,8 +8,8 @@ const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
 
-// Dummy generateToken function (replace with your actual JWT generation)
-const { generateToken } = require("../jwt"); // Make sure this exists
+// Import your JWT token generator here:
+const { generateToken } = require("../jwt"); // Make sure this is correctly implemented and exported
 
 // -------------------- LOGIN --------------------
 router.post("/login", async (req, res) => {
@@ -72,6 +72,7 @@ router.post("/upload-doc", upload.single("file"), async (req, res) => {
     await admin_.save();
 
     // Use relative path to your Python script for deployment
+    // Adjust this path based on your deployment structure
     const pythonScript = path.join(__dirname, "..", "scripts", "chatbot_doc_5.py");
 
     const pyProcess = spawn("python", [pythonScript, file.path]);
